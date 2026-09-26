@@ -1,0 +1,40 @@
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SANA MAP">
+<link rel="manifest" href="manifest.json"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<title>SANA MAP</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
+#map{height:100vh}.top{position:fixed;z-index:1000;top:10px;left:12px;right:12px;display:flex;gap:8px}
+.search{flex:1;padding:13px;border:0;border-radius:14px;box-shadow:0 3px 16px #0002;font-size:15px}.btn{border:0;border-radius:14px;background:#111827;color:#fff;padding:0 14px}
+.bottom{position:fixed;z-index:1000;bottom:12px;left:12px;right:12px;display:flex;gap:8px}.bottom button{height:46px;flex:1;border:0;border-radius:14px;background:#fff;box-shadow:0 3px 16px #0002;font-weight:600}.main{background:#111827!important;color:#fff}
+.panel,.modal{position:fixed;z-index:2000}.panel{left:12px;right:12px;bottom:70px;background:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 35px #0004;display:none;max-height:65vh;overflow:auto}.show{display:block!important}
+.title{font-size:19px;font-weight:700}.meta{font-size:12px;color:#64748b;margin:5px 0 12px}.comment{white-space:pre-wrap;line-height:1.6}.tag{display:inline-block;background:#eef2ff;border-radius:999px;padding:5px 9px;font-size:12px;margin:3px}.actions{display:flex;gap:8px;margin-top:14px}.actions button{flex:1;padding:12px;border:0;border-radius:12px}.danger{background:#fee2e2;color:#991b1b}
+.modal{inset:0;background:#0006;display:none;align-items:flex-end}.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:20px}.sheet input,.sheet textarea,.sheet select{width:100%;padding:13px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:10px;font-size:15px}.sheet textarea{height:110px}.row{display:flex;gap:8px}.row>*{flex:1;height:46px}
+</style></head><body>
+<div id="map"></div><div class="top"><input id="search" class="search" placeholder="場所を検索（例：東京駅）"><button class="btn" id="locate">現在地</button></div>
+<div class="bottom"><button id="list">📋 保存一覧</button><button class="main" id="newPin">📍 ピンを追加</button><button id="export">⬇️ バックアップ</button></div>
+<div id="detail" class="panel"><div id="dTitle" class="title"></div><div id="dMeta" class="meta"></div><div id="dComment" class="comment"></div><div id="dTags"></div><div class="actions"><button id="closeDetail">閉じる</button><button class="danger" id="deletePin">削除</button></div></div>
+<div id="listPanel" class="panel"><div class="title">保存したピン</div><div id="listItems"></div><div class="actions"><button id="closeList">閉じる</button></div></div>
+<div id="modal" class="modal"><div class="sheet"><h2>📍 ピンを保存</h2><input id="pinTitle" placeholder="場所の名前"><select id="pinCategory"><option>おすすめ</option><option>カフェ</option><option>グルメ</option><option>仕事</option><option>旅行</option><option>買い物</option><option>デート</option><option>その他</option></select><textarea id="pinComment" placeholder="この場所についてメモ・コメント"></textarea><input id="pinTags" placeholder="タグ（カンマ区切り）"><div class="row"><button class="btn" id="cancel">キャンセル</button><button class="btn" id="save">保存する</button></div></div></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
+const map=L.map('map').setView([35.681236,139.767125],13);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+let pins=JSON.parse(localStorage.getItem('sana_map_pins')||'[]'),pending=null,selectedId=null,markers=new Map();
+const persist=()=>localStorage.setItem('sana_map_pins',JSON.stringify(pins));
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function markerFor(p){const m=L.marker([p.lat,p.lng]).addTo(map).bindTooltip(p.title||p.category);m.on('click',()=>showDetail(p.id));markers.set(p.id,m)}
+function showDetail(id){const p=pins.find(x=>x.id===id);if(!p)return;selectedId=id;dTitle.textContent=p.title||'名称未設定';dMeta.textContent=p.category+' ・ '+new Date(p.createdAt).toLocaleString('ja-JP');dComment.textContent=p.comment||'コメントなし';dTags.innerHTML=(p.tags||[]).map(t=>'<span class="tag">#'+esc(t)+'</span>').join('');detail.classList.add('show')}
+function openModal(){modal.classList.add('show');setTimeout(()=>pinTitle.focus(),100)}function closeModal(){modal.classList.remove('show');pending=null}
+pins.forEach(markerFor);map.on('click',e=>{pending={lat:e.latlng.lat,lng:e.latlng.lng};openModal()});
+save.onclick=()=>{if(!pending)return;const p={id:crypto.randomUUID(),...pending,title:pinTitle.value.trim(),category:pinCategory.value,comment:pinComment.value.trim(),tags:pinTags.value.split(',').map(x=>x.trim()).filter(Boolean),createdAt:Date.now()};pins.push(p);persist();markerFor(p);closeModal();showDetail(p.id);pinTitle.value='';pinComment.value='';pinTags.value=''};
+cancel.onclick=closeModal;closeDetail.onclick=()=>detail.classList.remove('show');
+deletePin.onclick=()=>{if(!selectedId)return;markers.get(selectedId)?.remove();markers.delete(selectedId);pins=pins.filter(p=>p.id!==selectedId);persist();selectedId=null;detail.classList.remove('show')};
+newPin.onclick=()=>{const c=map.getCenter();pending={lat:c.lat,lng:c.lng};openModal()};
+list.onclick=()=>{listItems.innerHTML=pins.length?pins.slice().reverse().map(p=>'<div style="padding:13px 0;border-bottom:1px solid #eee" data-id="'+p.id+'"><b>'+esc(p.title||'名称未設定')+'</b><div class="meta">'+esc(p.category)+'</div><div>'+esc((p.comment||'').slice(0,80))+'</div></div>').join(''):'まだ保存したピンはありません';listItems.querySelectorAll('[data-id]').forEach(x=>x.onclick=()=>{const p=pins.find(a=>a.id===x.dataset.id);listPanel.classList.remove('show');map.setView([p.lat,p.lng],16);showDetail(p.id)});listPanel.classList.add('show')};
+closeList.onclick=()=>listPanel.classList.remove('show');
+locate.onclick=()=>navigator.geolocation?.getCurrentPosition(p=>map.setView([p.coords.latitude,p.coords.longitude],17),()=>alert('位置情報を許可してください'));
+export.onclick=()=>{const b=new Blob([JSON.stringify(pins,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sana-map-backup.json';a.click()};
+search.onkeydown=async e=>{if(e.key!=='Enter')return;const q=search.value.trim();if(!q)return;const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=ja&q='+encodeURIComponent(q));const a=await r.json();if(a[0])map.setView([+a[0].lat,+a[0].lon],16);else alert('場所が見つかりません')};
+</script></body></html>
