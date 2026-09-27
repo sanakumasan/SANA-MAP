@@ -1,1 +1,15 @@
-{"name":"SANA MAP","short_name":"SANA MAP","start_url":"./index.html","display":"standalone","background_color":"#f8fafc","theme_color":"#111827","lang":"ja"}
+{
+  "short_name": "SANA-MAP",
+  "name": "SANA-MAP",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/SANA-MAP2/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "theme_color": "#111827"
+}
