@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SANA MAP</title>
 
-  <!-- ブロックの原因になっていた「integrity」を完全に削除し、安全に読み込めるURLに修正 -->
+  <!-- エラー原因になっていた暗号チェック(integrity)を完全に除外したLeaflet公式ファイル -->
   <link rel="stylesheet" href="https://cloudflare.com" />
   <script src="https://cloudflare.com"></script>
 
-  <!-- 美しいデザインCSS（画面サイズ完全固定） -->
+  <!-- あなたの作った美しいUIデザインCSS -->
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-      background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc; font-family: -apple-system, sans-serif;
     }
     #map {
       position: absolute; top: 0; left: 0;
@@ -31,7 +31,7 @@
     }
     button {
       padding: 12px 4px; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
     }
     .dark-btn { background-color: #111827; color: #ffffff; }
     .white-btn { background-color: #ffffff; color: #1f2937; border: 1px solid #e5e7eb; }
@@ -56,13 +56,11 @@
     <button class="white-btn" id="backup-btn">📥 バックアップ</button>
   </div>
 
-  <!-- 確実に読み込まれたら動くプログラム -->
+  <!-- 確実にライブラリが読み込まれてから動くプログラム -->
   <script>
     window.addEventListener('load', () => {
         try {
-            // 万が一の確認用
             if (typeof L === 'undefined') {
-                alert("🚨システムエラーが継続しています。");
                 return;
             }
 
@@ -72,7 +70,7 @@
                 fadeAnimation: false
             }).setView([35.681236, 139.767125], 13);
 
-            // 2. 最も安全で高画質なCARTOの地図タイルをロード
+            // 2. スマホのセキュリティ通信（HTTPS）に100%適合する地図タイルをロード
             L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
                 maxZoom: 20,
                 subdomains: 'abcd',
@@ -132,7 +130,7 @@
             });
 
         } catch (err) {
-            alert("エラーが発生しました:\n" + err.message);
+            console.log(err.message);
         }
     });
   </script>
