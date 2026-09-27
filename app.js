@@ -14,8 +14,8 @@ const carto = L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
 // 3. 地図を土台に貼り付ける
 carto.addTo(map);
 
-// 4. 最初の描画バグを防ぐため、画面表示から少し遅らせてサイズを強制再計算させる
-window.addEventListener('load', () => {
+// 4. 地図の準備ができたらサイズを強制再計算させる
+map.whenReady(() => {
     setTimeout(() => {
         map.invalidateSize(true);
     }, 300);
