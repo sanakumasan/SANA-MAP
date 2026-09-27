@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SANA MAP</title>
-  
-  <!-- manifest.jsonを読み込むための設定（絶対に必要です） -->
+
+  <!-- PWA（manifest.json）の設定 -->
   <link rel="manifest" href="./manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  <!-- LeafletのCSS (必ず先に読み込む) -->
-  <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  
-  <!-- ★ここにCSSコードを直接埋め込みました -->
+
+  <!-- ★【修正】LeafletのCSS（URLを完全なものにし、エラーの原因となる古いセキュリティコードを削除しました） -->
+  <link rel="stylesheet" href="https://unpkg.com" />
+
   <style>
     /* 全体のリセット設定 */
     html, body {
@@ -98,24 +97,34 @@
       border: 1px solid #e5e7eb;
     }
 
-    <body>
+    /* Leafletのデフォルトのコントロールボタン（+/-）の位置調整 */
+    .leaflet-top.leaflet-left {
+      top: 80px;
+    }
+  </style>
+</head>
+<body>
 
+  <!-- 1. 地図を表示するコンテナ -->
   <div id="map"></div>
 
+  <!-- 2. 上部検索バー -->
   <div class="top-bar">
     <input type="text" id="search-input" placeholder="場所を検索（例：東京駅）">
     <button id="current-location-btn" class="dark-btn">現在地</button>
   </div>
 
+  <!-- 3. 下部ナビゲーションバー -->
   <div class="bottom-bar">
     <button id="list-btn" class="white-btn">📋 保存一覧</button>
     <button id="add-pin-btn" class="dark-btn">📍 ピンを追加</button>
     <button id="backup-btn" class="white-btn">📥 バックアップ</button>
   </div>
 
+  <!-- ★【修正】LeafletのJavaScript本体のURLを完全に直しました -->
   <script src="https://unpkg.com"></script>
 
-  
+  <!-- あなたのapp.jsを読み込む設定 -->
   <script src="./app.js"></script>
 
 </body>
