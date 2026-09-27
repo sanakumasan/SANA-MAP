@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SANA MAP</title>
 
-  <!-- エラー原因になっていた暗号チェック(integrity)を完全に除外したLeaflet公式ファイル -->
-  <link rel="stylesheet" href="https://cloudflare.com" />
-  <script src="https://cloudflare.com"></script>
+  <!-- 先ほど作成した2つのファイルと安全に連携させます -->
+  <link rel="stylesheet" href="leaflet.css" />
+  <script type="module" src="leaflet.js"></script>
 
-  <!-- あなたの作った美しいUIデザインCSS -->
+  <!-- 美しいデザインCSS -->
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
@@ -56,83 +56,84 @@
     <button class="white-btn" id="backup-btn">📥 バックアップ</button>
   </div>
 
-  <!-- 確実にライブラリが読み込まれてから動くプログラム -->
+  <!-- 地図を動かすプログラム -->
   <script>
-    window.addEventListener('load', () => {
-        try {
-            if (typeof L === 'undefined') {
+    // モジュール読み込みの完了を安全に待つための処理
+    function startMap() {
+        if (typeof L === 'undefined') {
+            // まだ読み込み中の場合は0.1秒後に再挑戦
+            setTimeout(startMap, 100);
+            return;
+        }
+
+        // 1. 地図の初期化（東京駅を中心に設定）
+        const map = L.map('map', {
+            zoomControl: false,
+            fadeAnimation: false
+        }).setView([35.681236, 139.767125], 13);
+
+        // 2. 高画質なCARTOの地図タイルをロード
+        L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            subdomains: 'abcd',
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+
+        // 表示のズレを強制修正
+        setTimeout(() => { map.invalidateSize(true); }, 300);
+
+        // 3. ピン留めモードの状態管理
+        let isAddPinMode = false;
+        const addPinBtn = document.getElementById('add-pin-btn');
+
+        // 「📍 ピンを追加」ボタン
+        addPinBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isAddPinMode = !isAddPinMode;
+            if (isAddPinMode) {
+                addPinBtn.classList.add('active-btn');
+                addPinBtn.innerText = '🗺️ 地図をタップ';
+            } else {
+                addPinBtn.classList.remove('active-btn');
+                addPinBtn.innerText = '📍 ピンを追加';
+            }
+        });
+
+        // 4. 地図タップでピン＆コメント
+        map.on('click', (e) => {
+            if (!isAddPinMode) return;
+
+            setTimeout(() => {
+                const comment = prompt("この場所に残すコメントを入力してください：");
+                if (comment !== null && comment.trim() !== "") {
+                    const marker = L.marker(e.latlng).addTo(map);
+                    marker.bindPopup(`<b>コメント:</b><br>${comment}`).openPopup();
+                }
+                isAddPinMode = false;
+                addPinBtn.classList.remove('active-btn');
+                addPinBtn.innerText = '📍 ピンを追加';
+            }, 50);
+        });
+
+        // 5. 現在地GPS処理
+        document.getElementById('current-location-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!navigator.geolocation) {
+                alert("位置情報(GPS)に対応していません。");
                 return;
             }
-
-            // 1. 地図の初期化（東京駅を中心に設定）
-            const map = L.map('map', {
-                zoomControl: false,
-                fadeAnimation: false
-            }).setView([35.681236, 139.767125], 13);
-
-            // 2. スマホのセキュリティ通信（HTTPS）に100%適合する地図タイルをロード
-            L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
-                maxZoom: 20,
-                subdomains: 'abcd',
-                attribution: '&copy; OpenStreetMap &copy; CARTO'
-            }).addTo(map);
-
-            // 表示のズレを強制修正
-            setTimeout(() => { map.invalidateSize(true); }, 300);
-
-            // 3. ピン留めモードの状態管理
-            let isAddPinMode = false;
-            const addPinBtn = document.getElementById('add-pin-btn');
-
-            // 「📍 ピンを追加」ボタン
-            addPinBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                isAddPinMode = !isAddPinMode;
-                if (isAddPinMode) {
-                    addPinBtn.classList.add('active-btn');
-                    addPinBtn.innerText = '🗺️ 地図をタップ';
-                } else {
-                    addPinBtn.classList.remove('active-btn');
-                    addPinBtn.innerText = '📍 ピンを追加';
-                }
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                map.setView([lat, lng], 16);
+            }, (error) => {
+                alert("位置情報の取得に失敗しました。設定を確認してください。");
             });
+        });
+    }
 
-            // 4. 地図タップでピン＆コメント
-            map.on('click', (e) => {
-                if (!isAddPinMode) return;
-
-                setTimeout(() => {
-                    const comment = prompt("この場所に残すコメントを入力してください：");
-                    if (comment !== null && comment.trim() !== "") {
-                        const marker = L.marker(e.latlng).addTo(map);
-                        marker.bindPopup(`<b>コメント:</b><br>${comment}`).openPopup();
-                    }
-                    isAddPinMode = false;
-                    addPinBtn.classList.remove('active-btn');
-                    addPinBtn.innerText = '📍 ピンを追加';
-                }, 50);
-            });
-
-            // 5. 現在地GPS処理
-            document.getElementById('current-location-btn').addEventListener('click', (e) => {
-                e.preventDefault();
-                if (!navigator.geolocation) {
-                    alert("位置情報(GPS)に対応していません。");
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    map.setView([lat, lng], 16);
-                }, (error) => {
-                    alert("位置情報の取得に失敗しました。設定を確認してください。");
-                });
-            });
-
-        } catch (err) {
-            console.log(err.message);
-        }
-    });
+    // 画面が読み込まれたら起動チェックを開始
+    window.addEventListener('load', startMap);
   </script>
 </body>
 </html>
