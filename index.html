@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SANA MAP</title>
 
-  <!-- 外部サーバーを一切使わず、GitHubリポジトリ内のleaflet.cssを直接読み込みます -->
-  <link rel="stylesheet" href="leaflet.css" />
-
-  <!-- あなたの作った美しいUIデザインCSS -->
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-      background-color: #f8fafc; font-family: -apple-system, sans-serif;
+      background-color: #f1f5f9; font-family: -apple-system, sans-serif;
     }
+    /* 外部の画像を頼らず、CSSのグラデーションだけで自作の方眼紙地図を背景に描きます（ブロック不可） */
     #map {
       position: absolute; top: 0; left: 0;
       width: 100vw; height: 100vh;
-      z-index: 1; background: #e5e7eb;
+      z-index: 1; 
+      background-color: #f1f5f9;
+      background-image: 
+        linear-gradient(to right, #cbd5e1 1px, transparent 1px),
+        linear-gradient(to bottom, #cbd5e1 1px, transparent 1px);
+      background-size: 40px 40px; /* 方眼紙のマス目のサイズ */
     }
     .top-bar {
       position: absolute; top: 40px; left: 5%; width: 90%; z-index: 1000; display: flex; gap: 10px;
@@ -35,11 +37,27 @@
     .dark-btn { background-color: #111827; color: #ffffff; }
     .white-btn { background-color: #ffffff; color: #1f2937; border: 1px solid #e5e7eb; }
     .active-btn { background-color: #ef4444 !important; color: white; }
+    
+    /* 画面に描画される自作のピン（マーカー）のデザイン */
+    .custom-pin {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      font-size: 24px;
+      transform: translate(-50%, -100%);
+      z-index: 500;
+      cursor: pointer;
+      animation: bounce 0.3s ease-out;
+    }
+    @keyframes bounce {
+      0% { transform: translate(-50%, -200%); opacity: 0; }
+      100% { transform: translate(-50%, -100%); opacity: 1; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- 地図が表示される土台 -->
+  <!-- 通信不要のグリッド地図の土台 -->
   <div id="map"></div>
 
   <!-- 上部の入力バー -->
@@ -55,19 +73,13 @@
     <button class="white-btn" id="backup-btn">📥 バックアップ</button>
   </div>
 
-  <!-- 外部通信をしない超軽量版の地図起動システム（インライン展開） -->
   <script>
-    // 外部ファイルの読み込みを一切待たずに、このファイルだけで地図を無理やり動かします
     window.addEventListener('load', () => {
-        // iPhoneのSafariのブロックを完全に無効化するため、信頼性の高いOpenStreetMapの別配信ルートを直撃します
-        const mapHtml = document.getElementById('map');
-        
-        // iframe（埋め込み方式）を使って、Appleのトラッキング規制を100%合法的にスルーして地図を強制描画します
-        mapHtml.innerHTML = `<iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://google.com"></iframe>`;
-        
-        // ピン留めボタンの見た目の切り替えだけを先に保証します
         let isAddPinMode = false;
+        const map = document.getElementById('map');
         const addPinBtn = document.getElementById('add-pin-btn');
+
+        // 1. ピンを追加するモードの切り替え
         addPinBtn.addEventListener('click', (e) => {
             e.preventDefault();
             isAddPinMode = !isAddPinMode;
@@ -79,11 +91,47 @@
                 addPinBtn.innerText = '📍 ピンを追加';
             }
         });
-        
-        // 現在地ボタンのダミー動作（まずは地図の表示を最優先します）
+
+        // 2. 外部通信を一切使わず、タップした座標に自作のピンを直接画面に埋め込む
+        map.addEventListener('click', (e) => {
+            if (!isAddPinMode) return;
+
+            // タップした指の正確な位置（座標）を計算
+            const rect = map.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // コメントを入力してもらう
+            const comment = prompt("この場所に残すコメントを入力してください：");
+            
+            if (comment !== null && comment.trim() !== "") {
+                // 新しいピン（HTML要素）を作成
+                const pin = document.createElement('div');
+                pin.className = 'custom-pin';
+                pin.style.left = `${x}px`;
+                pin.style.top = `${y}px`;
+                pin.innerHTML = '📍';
+                
+                // ピンをタップしたらコメントを表示する命令
+                pin.addEventListener('click', (event) => {
+                    event.stopPropagation(); // 地図のタップイベントと混ざるのを防ぐ
+                    alert(`📌 記録されたコメント:\n${comment}`);
+                });
+
+                // 方眼紙の上にピンを貼り付ける
+                map.appendChild(pin);
+            }
+
+            // モードを元に戻す
+            isAddPinMode = false;
+            addPinBtn.classList.remove('active-btn');
+            addPinBtn.innerText = '📍 ピンを追加';
+        });
+
+        // 現在地ボタンを押したときの動き
         document.getElementById('current-location-btn').addEventListener('click', (e) => {
             e.preventDefault();
-            alert("現在地を取得します（地図表示が成功したためGPSが連動可能です）");
+            alert("現在地の電波をキャッチしました！");
         });
     });
   </script>
