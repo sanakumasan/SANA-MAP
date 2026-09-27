@@ -11,7 +11,6 @@ const map = L.map('map', {
 
 // 3. バックアップ用の地図タイルの設定（CARTO / 正しいURLに修正）
 const carto = L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
-
     maxZoom: 20,
     subdomains: 'abcd',
     attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com">CARTO</a>'
@@ -33,7 +32,7 @@ function useLayer(layer) {
     }, 150);
 }
 
-// 5. 【重要】読み込みイベントを先に登録してから地図を表示する（順番を修正）
+// 5. 読み込みイベントを先に登録してから地図を表示する
 osm.on('tileload', () => {
     tileLoaded = true;
     clearTimeout(fallbackTimer);
@@ -46,10 +45,6 @@ useLayer(osm);
 fallbackTimer = setTimeout(() => {
     if (!tileLoaded) {
         useLayer(carto);
-        if (typeof toast === 'function') {
-            toast('地図サーバーを切り替えました');
-        } else {
-            console.log('地図サーバーを切り替えました');
-        }
+        console.log('地図サーバーを切り替えました');
     }
 }, 3500);
