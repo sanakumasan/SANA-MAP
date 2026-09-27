@@ -5,35 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SANA MAP</title>
   
-  <!-- PWAの設定ファイル -->
+  <!-- manifest.jsonを読み込むための設定（絶対に必要です） -->
   <link rel="manifest" href="./manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- LeafletのCSS (必ずJSより先に読み込む) -->
+  <!-- LeafletのCSS (必ず先に読み込む) -->
   <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
+  <!-- ★ここにCSSコードを直接埋め込みました -->
   <style>
+    /* 全体のリセット設定 */
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8fafc;
     }
+
+    /* 地図を画面いっぱいに表示する設定 */
     #map {
       width: 100%;
       height: 100vh;
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 1;
+      z-index: 1; /* 地図を背景に配置 */
     }
-    /* ...省略（先ほどのCSSコードの残りをここにすべて貼る）... */
+
+    /* 上部検索バーの配置 */
+    .top-bar {
+      position: absolute;
+      top: 20px;
+      left: 5%;
+      width: 90%;
+      z-index: 1000; /* 地図より前面に出す */
+      display: flex;
+      gap: 10px;
+    }
+
+    .top-bar input {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      font-size: 16px;
+      outline: none;
+    }
+
+    /* 下部ボタンバーの配置 */
+    .bottom-bar {
+      position: absolute;
+      bottom: 30px;
+      left: 5%;
+      width: 90%;
+      z-index: 1000; /* 地図より前面に出す */
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* ボタンの共通スタイル */
+    .top-bar button, .bottom-bar button {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+      transition: transform 0.1s ease;
+    }
+
+    .top-bar button:active, .bottom-bar button:active {
+      transform: scale(0.95);
+    }
+
+    /* ボタンの色分け */
+    .dark-btn {
+      background-color: #111827;
+      color: #ffffff;
+    }
+
+    .white-btn {
+      background-color: #ffffff;
+      color: #1f2937;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* Leafletのデフォルトのコントロールボタン（＋/ー）の位置調整 */
+    .leaflet-top.leaflet-left {
+      top: 80px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1. 地図を表示するコンテナ (これが最背面になります) -->
+  <!-- 1. 地図を表示するコンテナ -->
   <div id="map"></div>
 
   <!-- 2. 上部検索バー -->
@@ -52,7 +125,7 @@
   <!-- LeafletのJavaScript -->
   <script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
-  <!-- 独自のJavaScript -->
+  <!-- あなたのapp.jsを読み込む設定 -->
   <script src="./app.js"></script>
 </body>
 </html>
