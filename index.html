@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <!-- iPhoneで画面が崩れないようにビューポートを設定 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SANA MAP</title>
 
@@ -11,11 +10,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- ★【対策1】地図のCSS（見た目）を確実に一番最初（head内）で読み込ませます -->
-  <link rel="stylesheet" href="https://unpkg.com" />
+  <!-- ★【重要】ブロックされない最大手サーバー(cdnjs)のCSSに切り替えました -->
+  <link rel="stylesheet" href="https://cloudflare.com" />
 
   <style>
-    /* ★【対策2】iPhoneで地図が「縦0マス」になって消えるのを防ぐための厳密な設定 */
     html, body {
       margin: 0;
       padding: 0;
@@ -27,7 +25,6 @@
       background-color: #f8fafc;
     }
 
-    /* 地図を画面いっぱいに強制的に広げます */
     #map {
       position: absolute !important;
       top: 0;
@@ -37,16 +34,15 @@
       width: 100% !important;
       height: 100% !important;
       min-height: 100vh;
-      z-index: 1; /* 地図は一番下 */
+      z-index: 1;
     }
 
-    /* 上部検索バーの配置（iPhoneのノッチ・画面上部を考慮） */
     .top-bar {
       position: absolute;
       top: calc(env(safe-area-inset-top) + 15px);
       left: 5%;
       width: 90%;
-      z-index: 1000; /* 地図より前面 */
+      z-index: 1000;
       display: flex;
       gap: 10px;
     }
@@ -62,19 +58,17 @@
       background: #ffffff;
     }
 
-    /* 下部ボタンバーの配置（iPhoneの画面下部つまみを考慮） */
     .bottom-bar {
       position: absolute;
       bottom: calc(env(safe-area-inset-bottom) + 20px);
       left: 5%;
       width: 90%;
-      z-index: 1000; /* 地図より前面 */
+      z-index: 1000;
       display: grid;
-      grid-template-columns: repeat(3, 1fr); /* 綺麗な3等分 */
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
 
-    /* ボタンの共通スタイル */
     .top-bar button, .bottom-bar button {
       padding: 12px 4px;
       border: none;
@@ -98,7 +92,6 @@
       border: 1px solid #e5e7eb;
     }
 
-    /* Leafletのコントロール（+/-）の位置を検索バーの下へ避難 */
     .leaflet-top.leaflet-left {
       top: calc(env(safe-area-inset-top) + 80px) !important;
     }
@@ -106,26 +99,22 @@
 </head>
 <body>
 
-  <!-- 地図コンテナ -->
   <div id="map"></div>
 
-  <!-- 上部検索バー -->
   <div class="top-bar">
     <input type="text" id="search-input" placeholder="場所を検索（例：東京駅）">
     <button id="current-location-btn" class="dark-btn">現在地</button>
   </div>
 
-  <!-- 下部ナビゲーションバー -->
   <div class="bottom-bar">
     <button id="list-btn" class="white-btn">📋 保存一覧</button>
     <button id="add-pin-btn" class="dark-btn">📍 ピンを追加</button>
     <button id="backup-btn" class="white-btn">📥 バックアップ</button>
   </div>
 
-  <!-- ★【対策3】LeafletのJavaScript（プログラム本体）を、自分で書いたapp.jsよりも必ず「前」に読み込ませます -->
-  <script src="https://unpkg.com"></script>
+  <!-- ★【最重要】通信ブロックを完全に回避するため、読み込み先を cdnjs に変更しました -->
+  <script src="https://cloudflare.com"></script>
 
-  <!-- あなたのapp.jsを読み込む設定 -->
   <script src="./app.js"></script>
 
 </body>
