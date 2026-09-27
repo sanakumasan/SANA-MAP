@@ -1,58 +1,43 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="SANA MAP">
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="https://unpkg.com">
-<title>SANA MAP</title>
-<style>
-*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;color:#111827}
-#map{position:fixed;inset:0;width:100%;height:100%;background:#e5e7eb}
-.top{position:fixed;z-index:1000;top:calc(env(safe-area-inset-top) + 10px);left:12px;right:12px;display:flex;gap:8px}
-.search{flex:1;background:#fff;border:0;border-radius:15px;padding:13px 15px;box-shadow:0 3px 16px #0002;font-size:15px}
-.btn{border:0;background:#111827;color:#fff;border-radius:14px;padding:0 14px;font-weight:600;box-shadow:0 3px 16px #0002}
-.bottom{position:fixed;z-index:1000;bottom:calc(env(safe-area-inset-bottom) + 12px);left:12px;right:12px;display:flex;gap:8px}
-.bottom button{height:46px;flex:1;border:0;border-radius:14px;background:#fff;box-shadow:0 3px 16px #0002;font-weight:600}
-.bottom .main{background:#111827;color:#fff}
-.panel,.modal{position:fixed;z-index:2000}
-.panel{left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 70px);background:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 35px #0004;display:none;max-height:65vh;overflow:auto}
-.panel.show{display:block}
-.title{font-size:19px;font-weight:700}
-.meta{font-size:12px;color:#64748b;margin:5px 0 12px}
-.comment{white-space:pre-wrap;line-height:1.6}
-.tag{display:inline-block;background:#eef2ff;border-radius:999px;padding:5px 9px;font-size:12px;margin:3px}
-.actions{display:flex;gap:8px;margin-top:14px}
-.actions button{flex:1;border:0;border-radius:12px;padding:12px}
-.danger{background:#fee2e2;color:#991b1b}
-.modal{inset:0;background:#0006;display:none;align-items:flex-end}
-.modal.show{display:flex}
-.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:20px calc(20px + env(safe-area-inset-right)) padding:20px calc(20px + env(safe-area-inset-left)) padding:20px calc(20px + env(safe-area-inset-bottom))}
-.sheet h2{margin:0 0 15px}
-.sheet input,.sheet textarea,.sheet select{width:100%;padding:13px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:10px;font-size:15px}
-.sheet textarea{height:110px;resize:none}
-.row{display:flex;gap:8px}.row>*{flex:1;height:46px}
-.notice{position:fixed;z-index:3000;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 76px);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;display:none}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SANA MAP</title>
+  
+  <!-- PWAの設定ファイル -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- LeafletのCSS (必ずJSより先に読み込む) -->
+  <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  
+  <!-- 独自のCSS -->
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<div id="map"></div>
-<div class="top"><input id="search" class="search" placeholder="場所を検索（例：東京駅）"><button class="btn" id="locate">現在地</button></div>
-<div class="bottom"><button id="list">📋 保存一覧</button><button class="main" id="newPin">📍 ピンを追加</button><button id="export">📥 バックアップ</button></div>
-<div id="notice" class="notice"></div>
-<div id="detail" class="panel"><div id="dTitle" class="title"></div><div id="dMeta" class="meta"></div><div id="dComment" class="comment"></div><div id="dTags"></div><div class="actions"><button id="closeDetail">閉じる</button><button class="danger" id="deletePin">削除</button></div></div>
-<div id="listPanel" class="panel"><div class="title">保存したピン</div><div id="listItems"></div><div class="actions"><button id="closeList">閉じる</button></div></div>
-<div id="modal" class="modal"><div class="sheet"><h2>📍 ピンを保存</h2><input id="pinTitle" placeholder="場所の名前"><select id="pinCategory"><option>おすすめ</option><option>カフェ</option><option>グルメ</option><option>仕事</option><option>旅行</option><option>買い物</option><option>デート</option><option>その他</option></select><textarea id="pinComment" placeholder="この場所についてメモ・コメント"></textarea><input id="pinTags" placeholder="タグ（カンマ区切り）"><div class="row"><button class="btn" id="cancel">キャンセル</button><button class="btn" id="save">保存する</button></div></div></div>
 
-<script src="https://unpkg.com"></script>
-<script src="https://unpkg.com"></script>
-<script src="https://rawgit.com"></script>
-</body>
-</html>
+  <!-- 1. 地図を表示するコンテナ (これが最背面になります) -->
+  <div id="map"></div>
 
+  <!-- 2. 上部検索バー -->
+  <div class="top-bar">
+    <input type="text" id="search-input" placeholder="場所を検索（例：東京駅）">
+    <button id="current-location-btn" class="dark-btn">現在地</button>
+  </div>
+
+  <!-- 3. 下部ナビゲーションバー -->
+  <div class="bottom-bar">
+    <button id="list-btn" class="white-btn">📋 保存一覧</button>
+    <button id="add-pin-btn" class="dark-btn">📍 ピンを追加</button>
+    <button id="backup-btn" class="white-btn">📥 バックアップ</button>
+  </div>
+
+  <!-- LeafletのJavaScript -->
+  <script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- 独自のJavaScript -->
+  <script src="./app.js"></script>
 </body>
 </html>
