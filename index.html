@@ -5,17 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SANA MAP</title>
 
-  <!-- スマホのブラウザに通信を絶対にブロックさせないための最も安全な最新Leafletライブラリ -->
-  <link rel="stylesheet" href="https://cloudflare.com" integrity="sha512-Zcn6dYu9NG9g47gIbe1C6O7C7+34vMeb8n+e8n1PzA1Q8L4jH7E2U2w9J7L/5x3m1+jW0A++v1wFv6D+o1v6wg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script src="https://cloudflare.com" integrity="sha512-BwHqmHdIuR76s0aU/L6o56u8E3K+3XmI0h1+FwUv6J2W3mZ5oBqV5F7G1w6v5wB1F8l8Y2z3G3gD+o6wB6w1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- ブロックの原因になっていた「integrity」を完全に削除し、安全に読み込めるURLに修正 -->
+  <link rel="stylesheet" href="https://cloudflare.com" />
+  <script src="https://cloudflare.com"></script>
 
-  <!-- あなたの作った美しいデザインCSS（スマホの表示崩れ対策済） -->
+  <!-- 美しいデザインCSS（画面サイズ完全固定） -->
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
       background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    /* 横幅・縦幅をスマホの画面サイズに100%固定 */
     #map {
       position: absolute; top: 0; left: 0;
       width: 100vw; height: 100vh;
@@ -57,92 +56,85 @@
     <button class="white-btn" id="backup-btn">📥 バックアップ</button>
   </div>
 
-  <!-- 確実にライブラリが読み込まれてから動く強固なプログラム -->
+  <!-- 確実に読み込まれたら動くプログラム -->
   <script>
-    (function() {
-        // スマホの読み込み速度に左右されない安全な起動トリガー
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                // 地図システムの存在確認
-                if (typeof L === 'undefined') {
-                    alert("🚨地図ライブラリ(Leaflet)への通信がブラウザのセキュリティ機能によって拒否されました。Wi-Fiを切るか、シークレットモードでお試しください。");
+    window.addEventListener('load', () => {
+        try {
+            // 万が一の確認用
+            if (typeof L === 'undefined') {
+                alert("🚨システムエラーが継続しています。");
+                return;
+            }
+
+            // 1. 地図の初期化（東京駅を中心に設定）
+            const map = L.map('map', {
+                zoomControl: false,
+                fadeAnimation: false
+            }).setView([35.681236, 139.767125], 13);
+
+            // 2. 最も安全で高画質なCARTOの地図タイルをロード
+            L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+                maxZoom: 20,
+                subdomains: 'abcd',
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(map);
+
+            // 表示のズレを強制修正
+            setTimeout(() => { map.invalidateSize(true); }, 300);
+
+            // 3. ピン留めモードの状態管理
+            let isAddPinMode = false;
+            const addPinBtn = document.getElementById('add-pin-btn');
+
+            // 「📍 ピンを追加」ボタン
+            addPinBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isAddPinMode = !isAddPinMode;
+                if (isAddPinMode) {
+                    addPinBtn.classList.add('active-btn');
+                    addPinBtn.innerText = '🗺️ 地図をタップ';
+                } else {
+                    addPinBtn.classList.remove('active-btn');
+                    addPinBtn.innerText = '📍 ピンを追加';
+                }
+            });
+
+            // 4. 地図タップでピン＆コメント
+            map.on('click', (e) => {
+                if (!isAddPinMode) return;
+
+                setTimeout(() => {
+                    const comment = prompt("この場所に残すコメントを入力してください：");
+                    if (comment !== null && comment.trim() !== "") {
+                        const marker = L.marker(e.latlng).addTo(map);
+                        marker.bindPopup(`<b>コメント:</b><br>${comment}`).openPopup();
+                    }
+                    isAddPinMode = false;
+                    addPinBtn.classList.remove('active-btn');
+                    addPinBtn.innerText = '📍 ピンを追加';
+                }, 50);
+            });
+
+            // 5. 現在地GPS処理
+            document.getElementById('current-location-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!navigator.geolocation) {
+                    alert("位置情報(GPS)に対応していません。");
                     return;
                 }
-
-                // 1. 地図の初期化（東京駅を中心に設定）
-                const map = L.map('map', {
-                    zoomControl: false,
-                    fadeAnimation: false,
-                    markerZoomAnimation: false
-                }).setView([35.681236, 139.767125], 13);
-
-                // 2. スマホの暗号化セキュリティ通信（HTTPS）に100%適合する地図タイルをロード
-                L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
-                    maxZoom: 20,
-                    subdomains: 'abcd',
-                    attribution: '&copy; OpenStreetMap &copy; CARTO'
-                }).addTo(map);
-
-                // 描画のタイミングズレを完全に力技で修正する
-                setTimeout(() => { map.invalidateSize(true); }, 300);
-
-                // 3. ピン留めモードの状態管理
-                let isAddPinMode = false;
-                const addPinBtn = document.getElementById('add-pin-btn');
-
-                // 「📍 ピンを追加」ボタンを押したときの切り替え処理
-                addPinBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    isAddPinMode = !isAddPinMode;
-                    if (isAddPinMode) {
-                        addPinBtn.classList.add('active-btn');
-                        addPinBtn.innerText = '🗺️ 地図をタップ';
-                    } else {
-                        addPinBtn.classList.remove('active-btn');
-                        addPinBtn.innerText = '📍 ピンを追加';
-                    }
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    map.setView([lat, lng], 16);
+                }, (error) => {
+                    alert("位置情報の取得に失敗しました。設定を確認してください。");
                 });
+            });
 
-                // 4. 地図をタップしたときにピンを立ててコメントを残す処理
-                map.on('click', (e) => {
-                    if (!isAddPinMode) return;
-
-                    // スマホのキーボード表示に干渉しない標準ポップアップ
-                    setTimeout(() => {
-                        const comment = prompt("この場所に残すコメントを入力してください：");
-                        if (comment !== null && comment.trim() !== "") {
-                            const marker = L.marker(e.latlng).addTo(map);
-                            marker.bindPopup(`<b>コメント:</b><br>${comment}`).openPopup();
-                        }
-
-                        // 自動でモードを安全に解除
-                        isAddPinMode = false;
-                        addPinBtn.classList.remove('active-btn');
-                        addPinBtn.innerText = '📍 ピンを追加';
-                    }, 50);
-                });
-
-                // 5. 「現在地」ボタンを押したときのGPS処理
-                document.getElementById('current-location-btn').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (!navigator.geolocation) {
-                        alert("お使いの端末は位置情報(GPS)に対応していません。");
-                        return;
-                    }
-                    navigator.geolocation.getCurrentPosition((position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        map.setView([lat, lng], 16);
-                    }, (error) => {
-                        alert("位置情報の取得に失敗しました。iPhoneの『設定 ＞ プライバシー ＞ 位置情報サービス』でSafariのアクセスが許可されているか確認してください。");
-                    });
-                });
-
-            } catch (err) {
-                alert("🚨実行エラーが発生しました:\n" + err.message);
-            }
-        });
-    })();
+        } catch (err) {
+            alert("エラーが発生しました:\n" + err.message);
+        }
+    });
   </script>
 </body>
 </html>
