@@ -61,7 +61,7 @@ function useLayer(layer){
   setTimeout(()=>map.invalidateSize(true),150);
 }
 useLayer(osm);
-
+    
 osm.on('tileload',()=>{tileLoaded=true;clearTimeout(fallbackTimer)});
 fallbackTimer=setTimeout(()=>{
   if(!tileLoaded){
