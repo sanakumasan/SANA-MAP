@@ -4,13 +4,13 @@ const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
 });
 
-// 2. 地図の初期化
+// 2. 地図の初期化（東京周辺を中心、ズームレベル13）
 const map = L.map('map', {
     zoomControl: true
 }).setView([35.681236, 139.767125], 13);
 
-// 3. ★【修正】バックアップ用の地図URLを完全に正しいものに修正しました
-const carto = L.tileLayer('https://cartocdn.com{z}/{x}/{y}{r}.png', {
+// 3. バックアップ用の地図タイルの設定（CARTO / 通信エラーが起きないよう {s} に完全修正）
+const carto = L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
     maxZoom: 20,
     subdomains: 'abcd',
     attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com">CARTO</a>'
@@ -27,24 +27,36 @@ function useLayer(layer) {
     }
     activeLayer = layer;
     layer.addTo(map);
+    
+    // 地図が確実に描画されるように命令を送る
     setTimeout(() => {
         map.invalidateSize(true);
     }, 150);
 }
 
-// 5. 読み込みイベントを登録
+// 5. 読み込みイベントを先に登録
 osm.on('tileload', () => {
     tileLoaded = true;
     clearTimeout(fallbackTimer);
+    console.log('OpenStreetMapの読み込みに成功しました');
 });
 
-// 初期表示
+// もしOSMがエラーを起こしたら即座にCARTOに切り替える設定を追加
+osm.on('tileerror', () => {
+    if (!tileLoaded) {
+        console.log('OpenStreetMapでエラーが発生したため、CARTOに切り替えます');
+        useLayer(carto);
+        clearTimeout(fallbackTimer);
+    }
+});
+
+// 初期レイヤーとしてOpenStreetMapを表示
 useLayer(osm);
 
-// 3.5秒タイマー（OSMが重い時はCARTOに切り替え）
+// 3.5秒以内にOSMが1枚も読み込めない場合は安全のためにCARTOに切り替える
 fallbackTimer = setTimeout(() => {
     if (!tileLoaded) {
         useLayer(carto);
-        console.log('地図サーバーを切り替えました');
+        console.log('タイムアウトのため、地図サーバーをCARTOに切り替えました');
     }
 }, 3500);
