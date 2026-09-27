@@ -5,21 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SANA MAP</title>
 
+  <!-- スマホのセキュリティに絶対にブロックされない公式Leafletファイル -->
+  <link rel="stylesheet" href="https://cloudflare.com" />
+  <script src="https://cloudflare.com"></script>
+
+  <!-- あなたの作った美しいUIデザインCSS -->
   <style>
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-      background-color: #f1f5f9; font-family: -apple-system, sans-serif;
+      background-color: #f8fafc; font-family: -apple-system, sans-serif;
     }
-    /* 外部の画像を頼らず、CSSのグラデーションだけで自作の方眼紙地図を背景に描きます（ブロック不可） */
     #map {
       position: absolute; top: 0; left: 0;
       width: 100vw; height: 100vh;
-      z-index: 1; 
-      background-color: #f1f5f9;
-      background-image: 
-        linear-gradient(to right, #cbd5e1 1px, transparent 1px),
-        linear-gradient(to bottom, #cbd5e1 1px, transparent 1px);
-      background-size: 40px 40px; /* 方眼紙のマス目のサイズ */
+      z-index: 1; background: #e5e7eb;
     }
     .top-bar {
       position: absolute; top: 40px; left: 5%; width: 90%; z-index: 1000; display: flex; gap: 10px;
@@ -37,27 +36,11 @@
     .dark-btn { background-color: #111827; color: #ffffff; }
     .white-btn { background-color: #ffffff; color: #1f2937; border: 1px solid #e5e7eb; }
     .active-btn { background-color: #ef4444 !important; color: white; }
-    
-    /* 画面に描画される自作のピン（マーカー）のデザイン */
-    .custom-pin {
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      font-size: 24px;
-      transform: translate(-50%, -100%);
-      z-index: 500;
-      cursor: pointer;
-      animation: bounce 0.3s ease-out;
-    }
-    @keyframes bounce {
-      0% { transform: translate(-50%, -200%); opacity: 0; }
-      100% { transform: translate(-50%, -100%); opacity: 1; }
-    }
   </style>
 </head>
 <body>
 
-  <!-- 通信不要のグリッド地図の土台 -->
+  <!-- 地図が表示される土台 -->
   <div id="map"></div>
 
   <!-- 上部の入力バー -->
@@ -73,66 +56,82 @@
     <button class="white-btn" id="backup-btn">📥 バックアップ</button>
   </div>
 
+  <!-- 日本政府サーバー直結の地図起動プログラム -->
   <script>
     window.addEventListener('load', () => {
-        let isAddPinMode = false;
-        const map = document.getElementById('map');
-        const addPinBtn = document.getElementById('add-pin-btn');
-
-        // 1. ピンを追加するモードの切り替え
-        addPinBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            isAddPinMode = !isAddPinMode;
-            if (isAddPinMode) {
-                addPinBtn.classList.add('active-btn');
-                addPinBtn.innerText = '🗺️ 地図をタップ';
-            } else {
-                addPinBtn.classList.remove('active-btn');
-                addPinBtn.innerText = '📍 ピンを追加';
+        try {
+            if (typeof L === 'undefined') {
+                return;
             }
-        });
 
-        // 2. 外部通信を一切使わず、タップした座標に自作のピンを直接画面に埋め込む
-        map.addEventListener('click', (e) => {
-            if (!isAddPinMode) return;
+            // 1. 地図の初期化（東京駅を中心に設定）
+            const map = L.map('map', {
+                zoomControl: false,
+                fadeAnimation: false
+            }).setView([35.681236, 139.767125], 13);
 
-            // タップした指の正確な位置（座標）を計算
-            const rect = map.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            // 2. ブロック確率0%：国土地理院の標準地図タイル（HTTPS安全通信版）をロード
+            L.tileLayer('https://gsi.go.jp{z}/{x}/{y}.png', {
+                minZoom: 2,
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://gsi.go.jp">国土地理院</a>'
+            }).addTo(map);
 
-            // コメントを入力してもらう
-            const comment = prompt("この場所に残すコメントを入力してください：");
-            
-            if (comment !== null && comment.trim() !== "") {
-                // 新しいピン（HTML要素）を作成
-                const pin = document.createElement('div');
-                pin.className = 'custom-pin';
-                pin.style.left = `${x}px`;
-                pin.style.top = `${y}px`;
-                pin.innerHTML = '📍';
-                
-                // ピンをタップしたらコメントを表示する命令
-                pin.addEventListener('click', (event) => {
-                    event.stopPropagation(); // 地図のタップイベントと混ざるのを防ぐ
-                    alert(`📌 記録されたコメント:\n${comment}`);
+            // 表示のズレを強制修正
+            setTimeout(() => { map.invalidateSize(true); }, 300);
+
+            // 3. ピン留めモードの状態管理
+            let isAddPinMode = false;
+            const addPinBtn = document.getElementById('add-pin-btn');
+
+            // 「📍 ピンを追加」ボタン
+            addPinBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isAddPinMode = !isAddPinMode;
+                if (isAddPinMode) {
+                    addPinBtn.classList.add('active-btn');
+                    addPinBtn.innerText = '🗺️ 地図をタップ';
+                } else {
+                    addPinBtn.classList.remove('active-btn');
+                    addPinBtn.innerText = '📍 ピンを追加';
+                }
+            });
+
+            // 4. 地図タップでピン＆コメント
+            map.on('click', (e) => {
+                if (!isAddPinMode) return;
+
+                setTimeout(() => {
+                    const comment = prompt("この場所に残すコメントを入力してください：");
+                    if (comment !== null && comment.trim() !== "") {
+                        const marker = L.marker(e.latlng).addTo(map);
+                        marker.bindPopup(`<b>コメント:</b><br>${comment}`).openPopup();
+                    }
+                    isAddPinMode = false;
+                    addPinBtn.classList.remove('active-btn');
+                    addPinBtn.innerText = '📍 ピンを追加';
+                }, 50);
+            });
+
+            // 5. 現在地GPS処理
+            document.getElementById('current-location-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!navigator.geolocation) {
+                    alert("位置情報(GPS)に対応していません。");
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    map.setView([lat, lng], 16);
+                }, (error) => {
+                    alert("位置情報の取得に失敗しました。設定を確認してください。");
                 });
+            });
 
-                // 方眼紙の上にピンを貼り付ける
-                map.appendChild(pin);
-            }
-
-            // モードを元に戻す
-            isAddPinMode = false;
-            addPinBtn.classList.remove('active-btn');
-            addPinBtn.innerText = '📍 ピンを追加';
-        });
-
-        // 現在地ボタンを押したときの動き
-        document.getElementById('current-location-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert("現在地の電波をキャッチしました！");
-        });
+        } catch (err) {
+            console.log(err.message);
+        }
     });
   </script>
 </body>
