@@ -98,34 +98,24 @@
       border: 1px solid #e5e7eb;
     }
 
-    /* Leafletのデフォルトのコントロールボタン（＋/ー）の位置調整 */
-    .leaflet-top.leaflet-left {
-      top: 80px;
-    }
-  </style>
-</head>
-<body>
+    <body>
 
-  <!-- 1. 地図を表示するコンテナ -->
   <div id="map"></div>
 
-  <!-- 2. 上部検索バー -->
   <div class="top-bar">
     <input type="text" id="search-input" placeholder="場所を検索（例：東京駅）">
     <button id="current-location-btn" class="dark-btn">現在地</button>
   </div>
 
-  <!-- 3. 下部ナビゲーションバー -->
   <div class="bottom-bar">
     <button id="list-btn" class="white-btn">📋 保存一覧</button>
     <button id="add-pin-btn" class="dark-btn">📍 ピンを追加</button>
     <button id="backup-btn" class="white-btn">📥 バックアップ</button>
   </div>
 
-  <!-- LeafletのJavaScript -->
-  <script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  
-  <!-- あなたのapp.jsを読み込む設定 -->
+  <script src="https://unpkg.com"></script>
+
   <script src="./app.js"></script>
+
 </body>
 </html>
