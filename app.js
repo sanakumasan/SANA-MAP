@@ -11,6 +11,7 @@ const map = L.map('map', {
 
 // 3. バックアップ用の地図タイルの設定（CARTO / 正しいURLに修正）
 const carto = L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+
     maxZoom: 20,
     subdomains: 'abcd',
     attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors &copy; <a href="https://carto.com">CARTO</a>'
